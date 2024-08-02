@@ -2,6 +2,7 @@
 
 - Fill a .env file according to the given .env.sample file.
 - For database setup, you can just create an empty database and left the NODE_ENV environment variable as "development" to let typeorm synchronize the tables, if you provide another value sync would be turned off and you would need to use the provided ddl.sql file in the root directory.
+- You need to be running a redis instance to enable caching, if redis keys are not provided the application should run as caching was never implemented. You can ignore the error message in the logs.
 - Install the dependencies using a package manager (I used pnpm and left my lockfile in).
 - Run the "start" or "start:dev" scripts.
 

@@ -34,7 +34,7 @@ export class RedisService {
           console.log('Redis connection closed');
         });
       } catch (e) {
-        console.log("An error occured while initializing redis client", e);
+        console.log("An error occured while initializing redis client");
         resolve(null);
       }
     })

@@ -6,12 +6,14 @@ import { TypeORMService } from "../../database/typeorm.service";
 import { ErrorBoundary } from "../../middlewares/error.middleware";
 import { UserController } from "../user/user.controller";
 import { BookController } from "../book/book.controller";
+import { RedisService } from "../../database/redis.service";
 
 @singleton()
 export class AppModule {
   constructor(
     @inject(ConfigService) private configService: ConfigService,
     @inject(TypeORMService) private typeORMService: TypeORMService,
+    @inject(RedisService) private redisService: RedisService,
     @inject(UserController) private userController: UserController,
     @inject(BookController) private bookController: BookController,
   ) {
@@ -35,9 +37,12 @@ export class AppModule {
 
     app.use(new ErrorBoundary().handleRequest);
 
-    app._router.stack.forEach(print.bind(null, []))
+    app._router.stack.forEach(print.bind(null, []));
 
-    await this.typeORMService.dataSource.initialize();
+    await Promise.all([
+      this.typeORMService.dataSource.initialize(),
+      this.redisService.connect(),
+    ])
 
     app.listen(port, () => {
       console.log(`Server is running at port: ${port}`);
@@ -45,6 +50,7 @@ export class AppModule {
   }
 }
 
+// https://stackoverflow.com/questions/14934452/how-to-get-all-registered-routes-in-express
 
 function print(path: any, layer: any) {
   if (layer.route) {

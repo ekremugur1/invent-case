@@ -7,6 +7,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { UserService } from "./user.service";
 import { Param } from "../../decorators/param.decorator";
 import { ReturnBookDto } from "./dto/return-book.dto";
+import { Cache } from "../../decorators/cache.decorator";
 
 @Controller("users")
 export class UserController {
@@ -17,11 +18,13 @@ export class UserController {
     return this.userService.create(dto);
   }
 
+  @Cache()
   @Get()
   async getUsers() {
     return this.userService.getUsers();
   }
 
+  @Cache()
   @Get(":id")
   async getUser(@Param("id") userId: string) {
     return this.userService.getUser(userId);

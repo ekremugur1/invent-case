@@ -11,6 +11,7 @@ import { Book } from "../book/book.entity";
 import { ReturnBookDto } from "./dto/return-book.dto";
 import { TypeORMService } from "../../database/typeorm.service";
 import { Score } from "../score/score.entity";
+import { CacheService } from "../../cache/cache.service";
 
 @injectable()
 export class UserService {
@@ -19,6 +20,7 @@ export class UserService {
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Book) private bookRepository: Repository<Book>,
     @InjectRepository(Score) private scoreRepository: Repository<Score>,
+    @inject(CacheService) private cacheService: CacheService
   ) { }
 
   async returnBook({ userId, bookId, dto }: { userId: string; bookId: string; dto: ReturnBookDto }) {
@@ -34,6 +36,8 @@ export class UserService {
     if (!user || !book || book.borrower_id !== user.id) {
       throw new BadRequestException();
     }
+
+    this.cacheService.clear("cache:getUsers:[]", `cache:getUser:[${user.id}]`);
 
     const existingScore = await this.scoreRepository.findOneBy({
       user_id: user.id,
@@ -84,6 +88,8 @@ export class UserService {
     if (!user || !book || !!book.borrower_id || score) {
       throw new BadRequestException();
     }
+
+    this.cacheService.clear("cache:getBooks:[]", `cache:getBook:[${book.id}]`);
 
     book.borrower = user;
     await this.bookRepository.save(book);
@@ -139,6 +145,8 @@ export class UserService {
     const savedUser = await this.userRepository.save({
       name: dto.name,
     });
+
+    this.cacheService.clear("cache:getUsers:[]", `cache:getUser:[${savedUser.id}]`);
 
     return { name: savedUser.name, id: savedUser.id };
   }

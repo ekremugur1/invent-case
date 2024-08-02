@@ -51,8 +51,6 @@ export const Controller = (basePath: string = "") => {
         methodName
       );
 
-      const user = Reflect.getMetadata("user", target.prototype, methodName);
-
       const reqIndex = Reflect.getMetadata("req", target.prototype, methodName);
       const resIndex = Reflect.getMetadata("res", target.prototype, methodName);
       const bodyIndex = Reflect.getMetadata(

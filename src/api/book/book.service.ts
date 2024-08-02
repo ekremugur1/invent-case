@@ -1,14 +1,16 @@
-import { injectable } from "tsyringe";
+import { inject, injectable } from "tsyringe";
 import { Repository } from "typeorm";
 import { InjectRepository } from "../../decorators/inject-repository.decorator";
 import { Book } from "./book.entity";
 import { BadRequestException, NotFoundException } from "../../helpers/error-type";
 import { CreateBookDto } from "./dto/create-book.dto";
+import { CacheService } from "../../cache/cache.service";
 
 @injectable()
 export class BookService {
   constructor(
-    @InjectRepository(Book) private bookRepository: Repository<Book>
+    @InjectRepository(Book) private bookRepository: Repository<Book>,
+    @inject(CacheService) private cacheService: CacheService
   ) { }
 
   async create(dto: CreateBookDto) {
@@ -24,6 +26,8 @@ export class BookService {
       name: dto.name,
     });
 
+    this.cacheService.clear("cache:getBooks:[]", `cache:getBook:[${savedBook.id}]`)
+
     return { name: savedBook.name, id: savedBook.id };
   }
 
@@ -37,32 +41,27 @@ export class BookService {
   }
 
   async getBook(bookId: string) {
-    try {
-      const query = this.bookRepository.createQueryBuilder("b");
+    const query = this.bookRepository.createQueryBuilder("b");
 
-      query.leftJoinAndSelect("b.scores", "score");
+    query.leftJoinAndSelect("b.scores", "score");
 
-      query.select("b.id");
-      query.addSelect("b.name");
-      query.addSelect("ROUND(COALESCE(AVG(score.rating), -1)::numeric, 2)", "average")
+    query.select("b.id");
+    query.addSelect("b.name");
+    query.addSelect("ROUND(COALESCE(AVG(score.rating), -1)::numeric, 2)", "average")
 
-      query.where("b.id = :bookId", { bookId });
-      query.groupBy("b.id")
+    query.where("b.id = :bookId", { bookId });
+    query.groupBy("b.id")
 
-      const result = await query.getRawOne();
+    const result = await query.getRawOne();
 
-      if (!result) {
-        throw new NotFoundException();
-      }
-
-      return {
-        id: result.b_id,
-        name: result.b_name,
-        score: result.average
-      };
-    } catch (error) {
-      console.log(error);
-
+    if (!result) {
+      throw new BadRequestException();
     }
+
+    return {
+      id: result.b_id,
+      name: result.b_name,
+      score: result.average
+    };
   }
 }

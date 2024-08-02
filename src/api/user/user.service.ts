@@ -37,7 +37,7 @@ export class UserService {
       throw new BadRequestException();
     }
 
-    this.cacheService.clear("cache:getUsers:[]", `cache:getUser:[${user.id}]`);
+    this.cacheService.clear("cache:getUsers:[]", `cache:getUser:[${user.id}]`, "cache:getBooks:[]", `cache:getBook:[${book.id}]`);
 
     const existingScore = await this.scoreRepository.findOneBy({
       user_id: user.id,
@@ -89,7 +89,7 @@ export class UserService {
       throw new BadRequestException();
     }
 
-    this.cacheService.clear("cache:getBooks:[]", `cache:getBook:[${book.id}]`);
+    this.cacheService.clear("cache:getUsers:[]", `cache:getUser:[${user.id}]`, "cache:getBooks:[]", `cache:getBook:[${book.id}]`);
 
     book.borrower = user;
     await this.bookRepository.save(book);
